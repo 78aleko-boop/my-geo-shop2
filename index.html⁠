@@ -1,2 +1,225 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoShop - ონლაინ მაღაზია</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fdf4f5',
+                            100: '#fbe8eb',
+                            500: '#e11d48',
+                            600: '#be123c',
+                            700: '#9f1239',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="filterCategory('all')">
+                <div class="bg-brand-500 text-white p-2.5 rounded-xl text-xl shadow-md">
+                    <i class="fa-solid fa-store"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-slate-900">GeoShop</h1>
+                    <p class="text-xs text-slate-500">პრემიუმ ონლაინ მაღაზია</p>
+                </div>
+            </div>
+            <div class="hidden md:flex flex-1 max-w-md mx-8">
+                <div class="relative w-full">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                        <i class="fa-solid fa-search"></i>
+                    </span>
+                    <input type="text" id="searchInput" oninput="handleSearch()" placeholder="მოძებნე პროდუქტი..." 
+                        class="w-full pl-10 pr-4 py-2.5 bg-slate-100 border-none rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all">
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleCart()" class="relative bg-slate-100 hover:bg-brand-50 text-slate-700 hover:text-brand-600 px-4 py-2.5 rounded-xl font-medium transition-all flex items-center space-x-2 border border-slate-200">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="hidden sm:inline">კალათა</span>
+                    <span id="cartBadge" class="bg-brand-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-8 sm:p-12 mb-10 text-white shadow-xl relative overflow-hidden flex flex-col justify-center min-h-[260px]">
+            <div class="absolute right-0 top-0 w-1/2 h-full opacity-10 bg-[radial-gradient(#e11d48_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            <div class="max-w-xl relative z-10">
+                <span class="bg-brand-500 text-white text-xs uppercase tracking-wider font-semibold px-3 py-1 rounded-full">ახალი კოლექცია 2026</span>
+                <h2 class="text-3xl sm:text-5xl font-black mt-3 tracking-tight">აღმოაჩინე ტრენდული პროდუქტები</h2>
+                <p class="text-slate-300 mt-3 text-sm sm:text-base">საუკეთესო ხარისხი და სწრაფი მიწოდება მთელი საქართველოს მასშტაბით.</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2 overflow-x-auto pb-4 mb-8 no-scrollbar" id="categoryFilters">
+            <button onclick="filterCategory('all')" class="cat-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-brand-500 text-white shadow-md shadow-brand-500/20 whitespace-nowrap">ყველა</button>
+            <button onclick="filterCategory('electronics')" class="cat-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 whitespace-nowrap">ელექტრონიკა</button>
+            <button onclick="filterCategory('clothing')" class="cat-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 whitespace-nowrap">ტანსაცმელი</button>
+            <button onclick="filterCategory('accessories')" class="cat-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 whitespace-nowrap">აქსესუარები</button>
+        </div>
+        <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+        <div id="emptyState" class="hidden text-center py-16">
+            <div class="text-5xl text-slate-300 mb-4"><i class="fa-solid fa-box-open"></i></div>
+            <h3 class="text-lg font-bold text-slate-700">პროდუქტები ვერ მოიძებნა</h3>
+            <p class="text-sm text-slate-500 mt-1">სცადეთ სხვა საძიებო სიტყვა ან კატეგორია.</p>
+        </div>
+    </main>
+    <div id="cartDrawer" class="fixed inset-0 z-50 overflow-hidden hidden">
+        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" onclick="toggleCart()"></div>
+        <div class="absolute inset-y-0 right-0 max-w-full flex pl-10">
+            <div class="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+                <div class="p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-cart-shopping text-brand-500 text-lg"></i>
+                        <h3 class="text-lg font-bold text-slate-900">თქვენი კალათა</h3>
+                    </div>
+                    <button onclick="toggleCart()" class="text-slate-400 hover:text-slate-600 p-2 rounded-lg text-lg">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div id="cartItemsList" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+                <div class="border-t border-slate-200 p-6 bg-slate-50 space-y-4">
+                    <div class="flex justify-between items-center text-slate-600">
+                        <span>სულ გადასახდელი:</span>
+                        <span id="cartTotalPrice" class="text-2xl font-black text-slate-900">0 ₾</span>
+                    </div>
+                    <button onclick="checkout()" class="w-full bg-brand-500 hover:bg-brand-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-brand-500/30 transition-all flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-credit-card"></i>
+                        <span>შეკვეთის გაფორმება</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer class="bg-white border-t border-slate-200 mt-auto py-6 text-center text-sm text-slate-500">
+        <p>&copy; 2026 GeoShop. ყველა უფლება დაცულია.</p>
+    </footer>
+    <script>
+        const products = [
+            { id: 1, name: "უსადენო ყურსასმენი Pro", category: "electronics", price: 199, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60", rating: 4.8, description: "მაღალი ხარისხის ხმაურით ჩახშობის სისტემა და გრძელვადიანი აკუმულატორი." },
+            { id: 2, name: "სმარტ საათი Series X", category: "electronics", price: 349, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60", rating: 4.9, description: "აკონტროლეთ ჯანმრთელობა, სპორტული აქტივობები და შეტყობინებები პირდაპირ მაჯიდან." },
+            { id: 3, name: "პრემიუმ ჰუდი (Unisex)", category: "clothing", price: 120, image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=500&auto=format&fit=crop&q=60", rating: 4.6, description: "რბილი, კომფორტული და გამძლე მასალა ყოველდღიური სტილისთვის." },
+            { id: 4, name: "მზის სათვალე Classic", category: "accessories", price: 85, image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500&auto=format&fit=crop&q=60", rating: 4.5, description: "UV ფილტრით დაცული ლინზები და ელეგანტური როზის ჩარჩო." },
+            { id: 5, name: "მექანიკური სათამაშო კლავიატურა", category: "electronics", price: 260, image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&auto=format&fit=crop&q=60", rating: 4.7, description: "RGB განათება, სწრაფი რეაგირება და მექანიკური სვიჩები." },
+            { id: 6, name: "თანამედროვე ზურგჩანთა", category: "accessories", price: 110, image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&auto=format&fit=crop&q=60", rating: 4.9, description: "წყალგაუმტარი მასალა, ლეპტოპის განყოფილება და ergonomic დიზაინი." }
+        ];
+        let cart = [];
+        let currentCategory = 'all';
+        let searchQuery = '';
+        function init() { renderProducts(); updateCartUI(); }
+        function renderProducts() {
+            const grid = document.getElementById('productGrid');
+            const emptyState = document.getElementById('emptyState');
+            const filtered = products.filter(p => {
+                const matchesCategory = currentCategory === 'all' || p.category === currentCategory;
+                const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.description.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesCategory && matchesSearch;
+            });
+            if (filtered.length === 0) { grid.innerHTML = ''; emptyState.classList.remove('hidden'); return; }
+            emptyState.classList.add('hidden');
+            grid.innerHTML = filtered.map(p => `
+                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+                    <div class="relative overflow-hidden aspect-square bg-slate-100">
+                        <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-bold text-slate-700 shadow-sm flex items-center space-x-1">
+                            <i class="fa-solid fa-star text-amber-400"></i>
+                            <span>${p.rating}</span>
+                        </div>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs font-semibold uppercase tracking-wider text-brand-600">${p.category}</span>
+                            <h3 class="font-bold text-slate-900 text-lg mt-1 group-hover:text-brand-600 transition-colors">${p.name}</h3>
+                            <p class="text-slate-500 text-xs mt-1.5 line-clamp-2">${p.description}</p>
+                        </div>
+                        <div class="mt-5 flex items-center justify-between pt-4 border-t border-slate-100">
+                            <div>
+                                <span class="text-xs text-slate-400 block">ფასი</span>
+                                <span class="text-xl font-black text-slate-900">${p.price} ₾</span>
+                            </div>
+                            <button onclick="addToCart(${p.id})" class="bg-slate-900 hover:bg-brand-500 text-white p-3 rounded-xl transition-all shadow-sm hover:shadow-md">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        function filterCategory(category) {
+            currentCategory = category;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.className = "cat-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 whitespace-nowrap";
+            });
+            event.target.className = "cat-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-brand-500 text-white shadow-md shadow-brand-500/20 whitespace-nowrap";
+            renderProducts();
+        }
+        function handleSearch() { searchQuery = document.getElementById('searchInput').value; renderProducts(); }
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            const existingItem = cart.find(item => item.id === productId);
+            if (existingItem) { existingItem.quantity += 1; } else { cart.push({ ...product, quantity: 1 }); }
+            updateCartUI();
+            const badge = document.getElementById('cartBadge');
+            badge.classList.add('scale-125');
+            setTimeout(() => badge.classList.remove('scale-125'), 200);
+        }
+        function updateQuantity(productId, delta) {
+            const item = cart.find(i => i.id === productId);
+            if (item) {
+                item.quantity += delta;
+                if (item.quantity <= 0) { cart = cart.filter(i => i.id !== productId); }
+            }
+            updateCartUI();
+        }
+        function toggleCart() { document.getElementById('cartDrawer').classList.toggle('hidden'); }
+        function updateCartUI() {
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            document.getElementById('cartBadge').innerText = totalItems;
+            document.getElementById('cartTotalPrice').innerText = totalPrice + ' ₾';
+            const listContainer = document.getElementById('cartItemsList');
+            if (cart.length === 0) {
+                listContainer.innerHTML = `<div class="text-center py-12 text-slate-400"><i class="fa-solid fa-basket-shopping text-4xl mb-3"></i><p class="text-sm">კალათა ცარიელია</p></div>`;
+                return;
+            }
+            listContainer.innerHTML = cart.map(item => `
+                <div class="flex items-center space-x-4 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                    <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded-xl bg-white">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-sm text-slate-900">${item.name}</h4>
+                        <span class="text-xs text-slate-500">${item.price} ₾ x ${item.quantity}</span>
+                        <div class="flex items-center space-x-3 mt-2">
+                            <button onclick="updateQuantity(${item.id}, -1)" class="w-6 h-6 bg-white border border-slate-200 rounded-md flex items-center justify-center text-xs font-bold hover:bg-slate-100">-</button>
+                            <span class="text-sm font-semibold">${item.quantity}</span>
+                            <button onclick="updateQuantity(${item.id}, 1)" class="w-6 h-6 bg-white border border-slate-200 rounded-md flex items-center justify-center text-xs font-bold hover:bg-slate-100">+</button>
+                        </div>
+                    </div>
+                    <span class="font-black text-slate-900 text-sm">${item.price * item.quantity} ₾</span>
+                </div>
+            `).join('');
+        }
+        function checkout() {
+            if (cart.length === 0) return;
+            alert('შეკვეთა წარმატებით გაფორმდა!');
+            cart = [];
+            updateCartUI();
+            toggleCart();
+        }
+        window.onload = init;
+    </script>
+</body>
+</html>
 
 
